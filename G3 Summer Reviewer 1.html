@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G3 Summer Reviewer 1 - Addition & Subtraction</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: radial-gradient(circle, #f0f7ff 0%, #e0f0fe 100%);
+        }
+        .header-title {
+            font-family: 'Fredoka One', cursive;
+        }
+        /* Vertical alignment column layout for up to 5-digit numbers + operator column */
+        .math-column-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 2.4rem);
+            gap: 0.4rem;
+            justify-content: center;
+            align-items: center;
+        }
+        .math-digit-box {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.6rem;
+            text-align: center;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        /* Custom kid-friendly inputs */
+        .digit-input {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 2.4rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .digit-input:focus {
+            transform: scale(1.1);
+            outline: none;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+        /* Carry/Borrow mini boxes */
+        .carry-input {
+            width: 2.1rem;
+            height: 2.1rem;
+            font-size: 0.9rem;
+            border-radius: 0.375rem;
+            background-color: #ecfdf5;
+            border: 2px dashed #10b981;
+            color: #047857;
+            text-align: center;
+            font-weight: bold;
+        }
+        .borrow-input {
+            width: 2.1rem;
+            height: 2.1rem;
+            font-size: 0.9rem;
+            border-radius: 0.375rem;
+            background-color: #fef2f2;
+            border: 2px dashed #ef4444;
+            color: #b91c1c;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* Lock styling to clearly visual locked cards */
+        .locked-input {
+            background-color: #f3f4f6 !important;
+            color: #9ca3af !important;
+            border-color: #e5e7eb !important;
+            cursor: not-allowed !important;
+            pointer-events: none;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-32">
+
+    <!-- Confetti celebration effect canvas -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full hidden"></canvas>
+
+    <div class="max-w-6xl mx-auto px-4 pt-8">
+        
+        <!-- App Title Header -->
+        <div class="text-center mb-6">
+            <h1 class="header-title text-4xl md:text-5xl text-blue-600 drop-shadow-sm mb-2">🚀 G3 Summer Reviewer 1</h1>
+            <p class="text-gray-600 text-lg font-semibold">Practice Addition and Subtraction (Hundreds & Thousands Mixed!)</p>
+        </div>
+
+        <!-- Parent Configuration & Score History Dashboard -->
+        <div class="bg-white rounded-3xl p-6 shadow-md border-2 border-blue-100 max-w-2xl mx-auto mb-8">
+            <div class="flex border-b border-gray-100 pb-3 mb-4 justify-around">
+                <button id="sub-tab-settings" onclick="toggleParentPanel('settings')" class="font-black text-blue-600 border-b-2 border-blue-600 pb-1 text-sm md:text-base">
+                    ⚙️ Parent Settings
+                </button>
+                <button id="sub-tab-history" onclick="toggleParentPanel('history')" class="font-bold text-gray-500 hover:text-blue-500 pb-1 text-sm md:text-base flex items-center gap-1.5">
+                    📈 Score History <span id="cloud-sync-status" class="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block"></span>
+                </button>
+            </div>
+            
+            <!-- Parent settings pane -->
+            <div id="parent-panel-settings" class="space-y-4 text-center md:text-left">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="block text-sm text-gray-500 font-bold mb-2">Select how many questions should be solved today:</span>
+                        <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+                            <button onclick="setQuestionsTarget(5)" id="btn-target-5" class="px-4 py-2 rounded-xl font-bold border-2 transition-all bg-blue-600 border-blue-600 text-white shadow-sm transform hover:scale-105">5 Questions</button>
+                            <button onclick="setQuestionsTarget(10)" id="btn-target-10" class="px-4 py-2 rounded-xl font-bold border-2 transition-all bg-white border-gray-200 text-gray-700 hover:bg-gray-50 transform hover:scale-105">10 Questions</button>
+                            <button onclick="setQuestionsTarget(15)" id="btn-target-15" class="px-4 py-2 rounded-xl font-bold border-2 transition-all bg-white border-gray-200 text-gray-700 hover:bg-gray-50 transform hover:scale-105">15 Questions</button>
+                            <button onclick="setQuestionsTarget(20)" id="btn-target-20" class="px-4 py-2 rounded-xl font-bold border-2 transition-all bg-white border-gray-200 text-gray-700 hover:bg-gray-50 transform hover:scale-105">20 Questions</button>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50/50 p-4 rounded-2xl text-center min-w-[120px] w-full md:w-auto">
+                        <span class="text-xs font-bold text-blue-500 uppercase">Target Questions</span>
+                        <div class="text-3xl font-black text-blue-900" id="current-target-lbl">5 each</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Score Tracker Dashboard Pane (Powered by Cloud Storage) -->
+            <div id="parent-panel-history" class="hidden space-y-3">
+                <div class="text-sm text-gray-500 font-bold flex justify-between items-center mb-1">
+                    <span>Completed Daily Cards:</span>
+                    <button onclick="loadScoresFromCloud()" class="text-xs text-blue-500 hover:underline">🔄 Refresh List</button>
+                </div>
+                
+                <!-- History Table Container -->
+                <div class="max-h-48 overflow-y-auto border border-gray-100 rounded-2xl bg-gray-50/50">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-100 font-black">
+                            <tr>
+                                <th class="px-4 py-2">Date & Time</th>
+                                <th class="px-4 py-2 text-center">Score</th>
+                                <th class="px-4 py-2 text-center">Percentage</th>
+                                <th class="px-4 py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-rows-tbody">
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-gray-400 font-semibold">No scores saved yet. Completed cards sync here!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Set Selector Tabs -->
+        <div class="flex justify-center gap-4 mb-8">
+            <button id="tab-addition" onclick="switchSection('addition')" class="px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-blue-600 text-white flex items-center gap-2">
+                ➕ Addition Practice (<span id="tab-add-cnt">5</span>)
+            </button>
+            <button id="tab-subtraction" onclick="switchSection('subtraction')" class="px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 flex items-center gap-2">
+                ➖ Subtraction Practice (<span id="tab-sub-cnt">5</span>)
+            </button>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <main>
+            <!-- ADDITION WORKSPACE -->
+            <div id="section-addition" class="space-y-6">
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl max-w-xl mx-auto mb-6 text-sm text-amber-900 shadow-sm font-semibold flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span><strong>Think carefully!</strong> Once you check your answer, the card will lock and save your score. Make sure to double check!</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn" id="addition-grid">
+                    <!-- Loaded dynamically via js -->
+                </div>
+            </div>
+
+            <!-- SUBTRACTION WORKSPACE -->
+            <div id="section-subtraction" class="hidden space-y-6">
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl max-w-xl mx-auto mb-6 text-sm text-amber-900 shadow-sm font-semibold flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span><strong>Think carefully!</strong> Once you check your answer, the card will lock and save your score. Make sure to double check!</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn" id="subtraction-grid">
+                    <!-- Loaded dynamically via js -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Dynamic Session Sticky Footer Stats -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-xl py-4 px-6 z-40 flex flex-wrap items-center justify-between gap-4 max-w-6xl mx-auto rounded-t-2xl">
+            <div class="flex items-center gap-3">
+                <div class="hidden md:block">
+                    <span class="text-xs text-gray-400 font-extrabold uppercase tracking-wide">Daily Session Progress</span>
+                    <div class="w-48 bg-gray-200 h-3.5 rounded-full overflow-hidden mt-1">
+                        <div id="live-progress-bar" class="bg-gradient-to-r from-emerald-400 to-green-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="text-gray-700 font-bold ml-1 text-sm md:text-base">
+                    Progress: <span id="progress-text-fraction">0/10</span> cards solved!
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="refreshSet()" id="btn-fresh-mix" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold transition transform active:scale-95 text-sm flex items-center gap-1.5">
+                    🔄 New Mixed Set
+                </button>
+                <button onclick="checkTotalFinished()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition transform active:scale-95 text-sm md:text-base flex items-center gap-1.5 shadow-md">
+                    🏁 Submit Daily Challenge
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast-notif" class="fixed bottom-24 right-6 bg-gray-950/90 text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-sm font-semibold transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none flex items-center gap-2">
+            <span>📋</span> <span id="toast-message">Success!</span>
+        </div>
+
+        <!-- Finished Modal popup -->
+        <div id="score-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform transition-all text-center animate-bounceIn">
+                <div class="text-6xl mb-3" id="modal-emoji">🏆</div>
+                <h2 class="text-3xl font-extrabold mb-2 header-title text-gray-800" id="modal-title">Incredible Job!</h2>
+                <p class="text-gray-600 text-lg mb-6" id="modal-body">Perfect scores all around!</p>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl mb-6 border border-blue-100">
+                    <div class="text-xs text-blue-600 font-extrabold uppercase tracking-wider">Your Daily Challenge Reward</div>
+                    <div class="text-2xl font-black text-blue-900 mt-1" id="modal-badge">🥇 Math Champion Badge</div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition transform active:scale-95">
+                        Back to My Workspace
+                    </button>
+                    <button onclick="closeModal(); refreshSet();" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition">
+                        Give Me Another Daily Set
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, query, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global DB Hookup variables
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'luca-math-reviewer';
+        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+
+        // Start Auth & Firestore Flow safely
+        async function startFirebase() {
+            if (!firebaseConfigRaw) {
+                console.warn("Cloud connection configurations not found. Running in offline practice mode.");
+                return;
+            }
+
+            try {
+                const config = JSON.parse(firebaseConfigRaw);
+                const app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Authentication Protocol
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('cloud-sync-status').className = "w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block animate-pulse";
+                        document.getElementById('cloud-sync-status').title = "Connected to Sync Cloud Services";
+                        // Preload initial cloud logs
+                        loadScoresFromCloud();
+                    }
+                });
+            } catch (err) {
+                console.error("Firebase Initialization Error: ", err);
+            }
+        }
+
+        // Expose Cloud Helpers dynamically to main window
+        window.saveResultToCloud = async function(score, total, percentage) {
+            if (!db || !currentUser) return;
+            try {
+                const scoreRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                await addDoc(scoreRef, {
+                    score: score,
+                    total: total,
+                    percentage: percentage,
+                    timestamp: new Date().toISOString(),
+                    userId: currentUser.uid
+                });
+                loadScoresFromCloud(); // Trigger automatic UI table refresh
+            } catch (e) {
+                console.error("Cloud saving failed: ", e);
+            }
+        };
+
+        window.loadScoresFromCloud = async function() {
+            if (!db || !currentUser) return;
+            try {
+                const scoreRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                const querySnapshot = await getDocs(scoreRef);
+                
+                let scores = [];
+                querySnapshot.forEach((doc) => {
+                    scores.push(doc.data());
+                });
+
+                // Sort purely in Javascript memory (Rule 2)
+                scores.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                const tbody = document.getElementById('history-rows-tbody');
+                if (scores.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-400 font-semibold">No scores saved yet. Completed cards sync here!</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                scores.forEach(s => {
+                    const localDate = new Date(s.timestamp).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    let badgeColor = "bg-rose-100 text-rose-800";
+                    let badgeLabel = "Keep Practicing";
+                    if (s.percentage === 100) {
+                        badgeColor = "bg-emerald-100 text-emerald-800";
+                        badgeLabel = "Perfect Score!";
+                    } else if (s.percentage >= 75) {
+                        badgeColor = "bg-blue-100 text-blue-800";
+                        badgeLabel = "Superstar";
+                    } else if (s.percentage >= 50) {
+                        badgeColor = "bg-amber-100 text-amber-800";
+                        badgeLabel = "Great Effort";
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50/50">
+                            <td class="px-4 py-2 font-semibold text-gray-600">${localDate}</td>
+                            <td class="px-4 py-2 text-center font-bold text-gray-800">${s.score} / ${s.total}</td>
+                            <td class="px-4 py-2 text-center font-extrabold text-blue-600">${s.percentage}%</td>
+                            <td class="px-4 py-2"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeColor}">${badgeLabel}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Failed to load historical cloud entries: ", err);
+            }
+        };
+
+        // Start Firebase
+        startFirebase();
+    </script>
+
+    <!-- App Logic Operations -->
+    <script>
+        let currentTargetCount = 5; // Default questions size
+        let additionQuestions = [];
+        let subtractionQuestions = [];
+        let currentSection = 'addition';
+        
+        // Track whether Luca got each question correct right now
+        let additionResults = [];
+        let subtractionResults = [];
+        
+        // Anti-cheating guard sets: true if checked, false otherwise
+        let checkedAdditionCards = [];
+        let checkedSubtractionCards = [];
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Settings Selector Panel controller
+        function toggleParentPanel(pane) {
+            const tabSet = document.getElementById('sub-tab-settings');
+            const tabHist = document.getElementById('sub-tab-history');
+            const panelSet = document.getElementById('parent-panel-settings');
+            const panelHist = document.getElementById('parent-panel-history');
+
+            if (pane === 'settings') {
+                tabSet.className = "font-black text-blue-600 border-b-2 border-blue-600 pb-1 text-sm md:text-base";
+                tabHist.className = "font-bold text-gray-500 hover:text-blue-500 pb-1 text-sm md:text-base";
+                panelSet.classList.remove('hidden');
+                panelHist.classList.add('hidden');
+            } else {
+                tabHist.className = "font-black text-blue-600 border-b-2 border-blue-600 pb-1 text-sm md:text-base";
+                tabSet.className = "font-bold text-gray-500 hover:text-blue-500 pb-1 text-sm md:text-base";
+                panelHist.classList.remove('hidden');
+                panelSet.classList.add('hidden');
+                
+                // Fetch dynamic historical logs from Firebase
+                if (window.loadScoresFromCloud) {
+                    window.loadScoresFromCloud();
+                }
+            }
+        }
+
+        // Parent settings controller
+        function setQuestionsTarget(count) {
+            currentTargetCount = count;
+            
+            // Toggle highlight on config buttons
+            [5, 10, 15, 20].forEach(num => {
+                const btn = document.getElementById(`btn-target-${num}`);
+                if (num === count) {
+                    btn.className = "px-4 py-2 rounded-xl font-bold border-2 transition-all bg-blue-600 border-blue-600 text-white shadow-sm transform hover:scale-105";
+                } else {
+                    btn.className = "px-4 py-2 rounded-xl font-bold border-2 transition-all bg-white border-gray-200 text-gray-700 hover:bg-gray-50 transform hover:scale-105";
+                }
+            });
+
+            document.getElementById('current-target-lbl').innerText = `${count} each`;
+            document.getElementById('tab-add-cnt').innerText = count;
+            document.getElementById('tab-sub-cnt').innerText = count;
+
+            // Generate a fresh workspace set
+            refreshSet();
+        }
+
+        function showNotification(msg) {
+            const toast = document.getElementById('toast-notif');
+            document.getElementById('toast-message').innerText = msg;
+            toast.className = "fixed bottom-24 right-6 bg-gray-950/95 text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-sm font-semibold transition-all duration-300 transform translate-y-0 opacity-100 flex items-center gap-2";
+            setTimeout(() => {
+                toast.className = "fixed bottom-24 right-6 bg-gray-950/95 text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-sm font-semibold transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none flex items-center gap-2";
+            }, 3500);
+        }
+
+        // Mix generator for addition (mixed hundreds and thousands)
+        function generateAdditionProblem() {
+            let type = getRandomInt(1, 3);
+            let num1, num2;
+            if (type === 1) {
+                // Hundreds (3-digit + 3-digit)
+                num1 = getRandomInt(100, 999);
+                num2 = getRandomInt(100, 999);
+            } else if (type === 2) {
+                // Thousands (4-digit + 4-digit)
+                num1 = getRandomInt(1000, 8999);
+                num2 = getRandomInt(1000, 8999);
+            } else {
+                // Mixed (4-digit + 3-digit)
+                num1 = getRandomInt(1000, 8999);
+                num2 = getRandomInt(100, 999);
+                if (Math.random() > 0.5) {
+                    let temp = num1;
+                    num1 = num2;
+                    num2 = temp;
+                }
+            }
+            return { num1, num2, answer: num1 + num2 };
+        }
+
+        // Mix generator for subtraction (mixed hundreds and thousands)
+        function generateSubtractionProblem() {
+            let type = getRandomInt(1, 3);
+            let num1, num2;
+            if (type === 1) {
+                // Hundreds (3-digit - 3-digit)
+                num1 = getRandomInt(200, 999);
+                num2 = getRandomInt(100, num1 - 10);
+            } else if (type === 2) {
+                // Thousands (4-digit - 4-digit)
+                num1 = getRandomInt(2000, 9999);
+                num2 = getRandomInt(1000, num1 - 10);
+            } else {
+                // Mixed (4-digit - 3-digit)
+                num1 = getRandomInt(1000, 9999);
+                num2 = getRandomInt(100, 999);
+            }
+            return { num1, num2, answer: num1 - num2 };
+        }
+
+        // Core generation engine
+        function generateFlashcards() {
+            additionQuestions = [];
+            subtractionQuestions = [];
+            additionResults = new Array(currentTargetCount).fill(false);
+            subtractionResults = new Array(currentTargetCount).fill(false);
+            
+            // Set up our anti-cheating tracking maps
+            checkedAdditionCards = new Array(currentTargetCount).fill(false);
+            checkedSubtractionCards = new Array(currentTargetCount).fill(false);
+
+            // Generate addition exercises needing carrying logic
+            while (additionQuestions.length < currentTargetCount) {
+                let p = generateAdditionProblem();
+                if (p.answer < 10000) {
+                    let aStr = p.num1.toString().padStart(4, '0');
+                    let bStr = p.num2.toString().padStart(4, '0');
+                    let carryRequired = false;
+                    for (let i = 0; i < 4; i++) {
+                        if (parseInt(aStr[i]) + parseInt(bStr[i]) >= 10) {
+                            carryRequired = true;
+                            break;
+                        }
+                    }
+                    if (carryRequired) {
+                        additionQuestions.push(p);
+                    }
+                }
+            }
+
+            // Generate subtraction exercises needing borrowing logic
+            while (subtractionQuestions.length < currentTargetCount) {
+                let p = generateSubtractionProblem();
+                let aStr = p.num1.toString().padStart(4, '0');
+                let bStr = p.num2.toString().padStart(4, '0');
+                let borrowRequired = false;
+                for (let i = 0; i < 4; i++) {
+                    if (parseInt(aStr[i]) < parseInt(bStr[i])) {
+                        borrowRequired = true;
+                        break;
+                    }
+                }
+                if (borrowRequired) {
+                    subtractionQuestions.push(p);
+                }
+            }
+        }
+
+        // Lock Card helper to prevent further edits after answer is shown
+        function lockCardInputs(type, idx) {
+            const card = document.getElementById(`${type}-card-${idx}`);
+            if (!card) return;
+            
+            // Lock all inputs inside the card grid
+            const inputs = card.querySelectorAll('input');
+            inputs.forEach(inp => {
+                inp.disabled = true;
+                inp.classList.add('locked-input');
+            });
+
+            // Disable the Check Answer button permanently for this session
+            const checkBtn = document.getElementById(`${type}-btn-check-${idx}`);
+            if (checkBtn) {
+                checkBtn.disabled = true;
+                checkBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
+        // Render Cards into View grids
+        function renderCards() {
+            const addGrid = document.getElementById('addition-grid');
+            const subGrid = document.getElementById('subtraction-grid');
+
+            addGrid.innerHTML = '';
+            subGrid.innerHTML = '';
+
+            // 1. Render Addition Worksheets (6-column math alignment supporting TTh)
+            additionQuestions.forEach((q, idx) => {
+                let s1 = q.num1.toString().padStart(5, ' ');
+                let s2 = q.num2.toString().padStart(5, ' ');
+
+                let cardHtml = `
+                <div class="bg-white rounded-3xl shadow-md border-2 border-gray-100 p-6 flex flex-col justify-between transition relative overflow-hidden" id="add-card-${idx}">
+                    <div class="absolute top-3 left-3 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
+                        Card #${idx + 1}
+                    </div>
+                    
+                    <div class="absolute top-3 right-3 text-lg font-black hidden" id="add-status-${idx}"></div>
+
+                    <div class="mt-4 flex flex-col items-center">
+                        <div class="math-column-grid text-gray-700">
+                            <!-- Carry Rows (TTh, Th, H, T) -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box">
+                                <input type="text" class="carry-input" id="add-carry-tth-${idx}" maxlength="1" placeholder="c">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="carry-input" id="add-carry-th-${idx}" maxlength="1" placeholder="c">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="carry-input" id="add-carry-h-${idx}" maxlength="1" placeholder="c">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="carry-input" id="add-carry-t-${idx}" maxlength="1" placeholder="c">
+                            </div>
+                            <div class="math-digit-box"></div>
+
+                            <!-- Num 1 Row (Padded index: 0=TTh, 1=Th, 2=H, 3=T, 4=O) -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[0].trim() ? s1[0] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[1].trim() ? s1[1] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[2].trim() ? s1[2] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[3]}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[4]}</div>
+
+                            <!-- Num 2 Row -->
+                            <div class="math-digit-box text-blue-400 font-extrabold text-right pr-2">+</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[0].trim() ? s2[0] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[1].trim() ? s2[1] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[2].trim() ? s2[2] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[3]}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[4]}</div>
+
+                            <!-- Bar Border -->
+                            <div class="col-span-6 border-b-4 border-gray-800 rounded-full my-1"></div>
+
+                            <!-- Answer Digits -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="add-ans-tth-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="add-ans-th-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="add-ans-h-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="add-ans-t-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="add-ans-o-${idx}" maxlength="1">
+                            </div>
+
+                            <!-- Label tags -->
+                            <div class="text-[9px] text-gray-400 text-center uppercase tracking-widest col-span-6 grid grid-cols-6 mt-1 font-bold">
+                                <span></span>
+                                <span>TTh</span>
+                                <span>Th</span>
+                                <span>H</span>
+                                <span>T</span>
+                                <span>O</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instant checking actions inside card -->
+                    <div class="mt-5 pt-3 border-t border-gray-100 flex flex-col gap-2">
+                        <button onclick="checkIndividualCard('add', ${idx})" id="add-btn-check-${idx}" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-2 rounded-xl text-sm transition-all transform hover:scale-102 active:scale-95 shadow-sm">
+                            🎯 Check Answer
+                        </button>
+                    </div>
+
+                    <!-- Dynamic step-by-step math solver feedback block -->
+                    <div id="add-exp-box-${idx}" class="hidden mt-4 bg-amber-50 rounded-2xl p-4 border border-amber-200 text-sm text-gray-700">
+                        <div class="font-bold text-amber-800 mb-1 flex items-center gap-1">💡 Study column steps:</div>
+                        <ul class="list-disc list-inside space-y-1 text-xs">
+                            <li><strong>Ones place (O):</strong> ${s1[4].trim() || '0'} + ${s2[4].trim() || '0'} = ${parseInt(s1[4].trim() || 0) + parseInt(s2[4].trim() || 0)}.</li>
+                            <li><strong>Tens place (T):</strong> ${s1[3].trim() || '0'} + ${s2[3].trim() || '0'} = ${parseInt(s1[3].trim() || 0) + parseInt(s2[3].trim() || 0)}.</li>
+                            <li><strong>Hundreds place (H):</strong> ${s1[2].trim() || '0'} + ${s2[2].trim() || '0'} = ${parseInt(s1[2].trim() || 0) + parseInt(s2[2].trim() || 0)}.</li>
+                            <li><strong>Thousands place (Th):</strong> ${s1[1].trim() || '0'} + ${s2[1].trim() || '0'} = ${parseInt(s1[1].trim() || 0) + parseInt(s2[1].trim() || 0)}.</li>
+                        </ul>
+                        <div class="mt-2 text-center text-emerald-800 font-extrabold bg-white/70 py-1 rounded-md border border-emerald-100">Correct answer was: ${q.answer}</div>
+                    </div>
+                </div>`;
+                addGrid.innerHTML += cardHtml;
+            });
+
+            // 2. Render Subtraction Worksheets (6-column layout with Th, H, T, O digits)
+            subtractionQuestions.forEach((q, idx) => {
+                let s1 = q.num1.toString().padStart(5, ' ');
+                let s2 = q.num2.toString().padStart(5, ' ');
+
+                let cardHtml = `
+                <div class="bg-white rounded-3xl shadow-md border-2 border-gray-100 p-6 flex flex-col justify-between transition relative overflow-hidden" id="sub-card-${idx}">
+                    <div class="absolute top-3 left-3 bg-rose-100 text-rose-800 text-xs px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
+                        Card #${idx + 1 + currentTargetCount}
+                    </div>
+                    
+                    <div class="absolute top-3 right-3 text-lg font-black hidden" id="sub-status-${idx}"></div>
+
+                    <div class="mt-4 flex flex-col items-center">
+                        <div class="math-column-grid text-gray-700">
+                            <!-- Borrow modification inputs (TTh, Th, H, T, O) -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box">
+                                <input type="text" class="borrow-input" id="sub-borrow-tth-${idx}" maxlength="2" placeholder="b">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="borrow-input" id="sub-borrow-th-${idx}" maxlength="2" placeholder="b">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="borrow-input" id="sub-borrow-h-${idx}" maxlength="2" placeholder="b">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="borrow-input" id="sub-borrow-t-${idx}" maxlength="2" placeholder="b">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="borrow-input" id="sub-borrow-o-${idx}" maxlength="2" placeholder="b">
+                            </div>
+
+                            <!-- Num 1 Row -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[0].trim() ? s1[0] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[1].trim() ? s1[1] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[2].trim() ? s1[2] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[3]}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s1[4]}</div>
+
+                            <!-- Num 2 Row -->
+                            <div class="math-digit-box text-rose-500 font-extrabold text-right pr-2">-</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[0].trim() ? s2[0] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[1].trim() ? s2[1] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[2].trim() ? s2[2] : ''}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[3]}</div>
+                            <div class="math-digit-box text-blue-950 font-black">${s2[4]}</div>
+
+                            <!-- Divider Bar -->
+                            <div class="col-span-6 border-b-4 border-gray-800 rounded-full my-1"></div>
+
+                            <!-- Subtraction Inputs -->
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box"></div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="sub-ans-th-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="sub-ans-h-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="sub-ans-t-${idx}" maxlength="1">
+                            </div>
+                            <div class="math-digit-box">
+                                <input type="text" class="digit-input border-2 border-gray-200 bg-gray-50 focus:bg-white text-gray-900 font-bold" id="sub-ans-o-${idx}" maxlength="1">
+                            </div>
+
+                            <!-- labels under inputs -->
+                            <div class="text-[9px] text-gray-400 text-center uppercase tracking-widest col-span-6 grid grid-cols-6 mt-1 font-bold">
+                                <span></span>
+                                <span></span>
+                                <span>Th</span>
+                                <span>H</span>
+                                <span>T</span>
+                                <span>O</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instant checking actions inside card -->
+                    <div class="mt-5 pt-3 border-t border-gray-100 flex flex-col gap-2">
+                        <button onclick="checkIndividualCard('sub', ${idx})" id="sub-btn-check-${idx}" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-2 rounded-xl text-sm transition-all transform hover:scale-102 active:scale-95 shadow-sm">
+                            🎯 Check Answer
+                        </button>
+                    </div>
+
+                    <!-- Dynamic step-by-step subtraction solver feedback -->
+                    <div id="sub-exp-box-${idx}" class="hidden mt-4 bg-amber-50 rounded-2xl p-4 border border-amber-200 text-sm text-gray-700">
+                        <div class="font-bold text-amber-800 mb-1 flex items-center gap-1">💡 Study column steps:</div>
+                        <ul class="list-disc list-inside space-y-1 text-xs">
+                            <li>Work from right column (Ones place) towards the left.</li>
+                            <li><strong>Ones place (O):</strong> Does ${s1[4].trim() || '0'} need to borrow from ${s1[3].trim() || '0'}? ${parseInt(s1[4].trim() || 0) < parseInt(s2[4].trim() || 0) ? 'Yes! Borrow 10, make it ' + (parseInt(s1[4].trim() || 0) + 10) : 'No, simple subtraction!'}</li>
+                            <li>Subtract the remaining columns considering any borrowed values.</li>
+                        </ul>
+                        <div class="mt-2 text-center text-rose-800 font-extrabold bg-white/70 py-1 rounded-md border border-rose-100">Correct answer was: ${q.answer}</div>
+                    </div>
+                </div>`;
+                subGrid.innerHTML += cardHtml;
+            });
+
+            setupFocusFlow();
+            updateSessionFooterStats();
+        }
+
+        // Auto focus flow helper so keyboard usage is seamless for kids (right-to-left O -> T -> H -> Th -> TTh)
+        function setupFocusFlow() {
+            document.querySelectorAll('.digit-input').forEach(input => {
+                input.addEventListener('keyup', (e) => {
+                    const val = e.target.value;
+                    const id = e.target.id;
+                    const cardIdx = id.split('-')[3];
+                    const type = id.split('-')[0]; // add or sub
+
+                    // Do not focus on disabled inputs
+                    if (val.length >= 1) {
+                        if (type === 'add') {
+                            if (id.includes('ans-o')) focusIfEnabled(`add-ans-t-${cardIdx}`);
+                            else if (id.includes('ans-t')) focusIfEnabled(`add-ans-h-${cardIdx}`);
+                            else if (id.includes('ans-h')) focusIfEnabled(`add-ans-th-${cardIdx}`);
+                            else if (id.includes('ans-th')) focusIfEnabled(`add-ans-tth-${cardIdx}`);
+                        } else {
+                            if (id.includes('ans-o')) focusIfEnabled(`sub-ans-t-${cardIdx}`);
+                            else if (id.includes('ans-t')) focusIfEnabled(`sub-ans-h-${cardIdx}`);
+                            else if (id.includes('ans-h')) focusIfEnabled(`sub-ans-th-${cardIdx}`);
+                        }
+                    }
+                });
+            });
+        }
+
+        function focusIfEnabled(id) {
+            const el = document.getElementById(id);
+            if (el && !el.disabled) {
+                el.focus();
+            }
+        }
+
+        // PER-QUESTION INSTANT GRADING CONTROLLER
+        function checkIndividualCard(type, idx) {
+            // Guard clause to prevent duplicate checking or hacking checked items
+            if (type === 'add' && checkedAdditionCards[idx]) return;
+            if (type === 'sub' && checkedSubtractionCards[idx]) return;
+
+            let card = document.getElementById(`${type}-card-${idx}`);
+            let badge = document.getElementById(`${type}-status-${idx}`);
+            let exp = document.getElementById(`${type}-exp-box-${idx}`);
+            let checkBtn = document.getElementById(`${type}-btn-check-${idx}`);
+
+            badge.classList.remove('hidden');
+
+            if (type === 'add') {
+                checkedAdditionCards[idx] = true;
+                const q = additionQuestions[idx];
+                const tth = document.getElementById(`add-ans-tth-${idx}`).value.trim();
+                const th = document.getElementById(`add-ans-th-${idx}`).value.trim();
+                const h = document.getElementById(`add-ans-h-${idx}`).value.trim();
+                const t = document.getElementById(`add-ans-t-${idx}`).value.trim();
+                const o = document.getElementById(`add-ans-o-${idx}`).value.trim();
+
+                let combined = parseInt(tth + th + h + t + o);
+
+                if (combined === q.answer) {
+                    additionResults[idx] = true;
+                    card.className = "bg-emerald-50/40 rounded-3xl shadow-md border-2 border-emerald-500 p-6 flex flex-col justify-between transition relative overflow-hidden";
+                    badge.innerHTML = "🎉 Correct!";
+                    badge.className = "absolute top-3 right-3 text-emerald-700 text-xs font-black bg-emerald-100 px-3 py-1 rounded-full shadow-sm animate-bounce";
+                    exp.classList.add('hidden');
+                    checkBtn.innerHTML = "🎯 Solved!";
+                    checkBtn.className = "w-full bg-emerald-500 text-white font-black py-2 rounded-xl text-sm cursor-default";
+                } else {
+                    additionResults[idx] = false;
+                    card.className = "bg-rose-50/10 rounded-3xl shadow-md border-2 border-rose-400 p-6 flex flex-col justify-between transition relative overflow-hidden";
+                    badge.innerHTML = "❌ Incorrect";
+                    badge.className = "absolute top-3 right-3 text-rose-700 text-xs font-black bg-rose-100 px-3 py-1 rounded-full shadow-sm";
+                    exp.classList.remove('hidden');
+                    checkBtn.innerHTML = "🔒 Answer Locked";
+                    checkBtn.className = "w-full bg-gray-400 text-white font-extrabold py-2 rounded-xl text-sm cursor-not-allowed";
+                }
+            } else {
+                checkedSubtractionCards[idx] = true;
+                const q = subtractionQuestions[idx];
+                const th = document.getElementById(`sub-ans-th-${idx}`).value.trim();
+                const h = document.getElementById(`sub-ans-h-${idx}`).value.trim();
+                const t = document.getElementById(`sub-ans-t-${idx}`).value.trim();
+                const o = document.getElementById(`sub-ans-o-${idx}`).value.trim();
+
+                let combined = parseInt(th + h + t + o);
+
+                if (combined === q.answer) {
+                    subtractionResults[idx] = true;
+                    card.className = "bg-emerald-50/40 rounded-3xl shadow-md border-2 border-emerald-500 p-6 flex flex-col justify-between transition relative overflow-hidden";
+                    badge.innerHTML = "🎉 Correct!";
+                    badge.className = "absolute top-3 right-3 text-emerald-700 text-xs font-black bg-emerald-100 px-3 py-1 rounded-full shadow-sm animate-bounce";
+                    exp.classList.add('hidden');
+                    checkBtn.innerHTML = "🎯 Solved!";
+                    checkBtn.className = "w-full bg-emerald-500 text-white font-black py-2 rounded-xl text-sm cursor-default";
+                } else {
+                    subtractionResults[idx] = false;
+                    card.className = "bg-rose-50/10 rounded-3xl shadow-md border-2 border-rose-400 p-6 flex flex-col justify-between transition relative overflow-hidden";
+                    badge.innerHTML = "❌ Incorrect";
+                    badge.className = "absolute top-3 right-3 text-rose-700 text-xs font-black bg-rose-100 px-3 py-1 rounded-full shadow-sm";
+                    exp.classList.remove('hidden');
+                    checkBtn.innerHTML = "🔒 Answer Locked";
+                    checkBtn.className = "w-full bg-gray-400 text-white font-extrabold py-2 rounded-xl text-sm cursor-not-allowed";
+                }
+            }
+
+            // Immediately run helper lock to prevent editing or rechecking
+            lockCardInputs(type, idx);
+            updateSessionFooterStats();
+        }
+
+        // Live stats counter for the footer progress controller
+        function updateSessionFooterStats() {
+            // Count total cards completed (checked)
+            let checkedAdd = checkedAdditionCards.filter(Boolean).length;
+            let checkedSub = checkedSubtractionCards.filter(Boolean).length;
+            let totalChecked = checkedAdd + checkedSub;
+            let totalChallenges = currentTargetCount * 2;
+
+            document.getElementById('progress-text-fraction').innerText = `${totalChecked}/${totalChallenges}`;
+            
+            const percentage = Math.round((totalChecked / totalChallenges) * 100);
+            document.getElementById('live-progress-bar').style.width = `${percentage}%`;
+        }
+
+        // Submit entire workbook grader action
+        function checkTotalFinished() {
+            // Automatically grade any cards that haven't been individually checked yet
+            additionQuestions.forEach((_, idx) => {
+                if (!checkedAdditionCards[idx]) checkIndividualCard('add', idx);
+            });
+            subtractionQuestions.forEach((_, idx) => {
+                if (!checkedSubtractionCards[idx]) checkIndividualCard('sub', idx);
+            });
+
+            let correctAdd = additionResults.filter(Boolean).length;
+            let correctSub = subtractionResults.filter(Boolean).length;
+            let score = correctAdd + correctSub;
+            let maxScore = currentTargetCount * 2;
+            let percentage = Math.round((score / maxScore) * 100);
+
+            // Cloud Sync trigger
+            if (window.saveResultToCloud) {
+                window.saveResultToCloud(score, maxScore, percentage);
+            }
+
+            const modal = document.getElementById('score-modal');
+            const emoji = document.getElementById('modal-emoji');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            const badge = document.getElementById('modal-badge');
+
+            modal.classList.remove('hidden');
+
+            if (score === maxScore) {
+                emoji.innerText = "🏆🌟🥇";
+                title.innerText = "Absolute Math Champion!";
+                body.innerText = `Whoa! You completed the full daily challenge target successfully! You mastered all ${maxScore} problems and saved your score to the cloud tracker!`;
+                badge.innerText = `🔥 Grand Math Champion (${score}/${maxScore})`;
+                startConfetti();
+            } else if (score >= Math.floor(maxScore * 0.75)) {
+                emoji.innerText = "🎖️✨";
+                title.innerText = "Incredible Effort!";
+                body.innerText = `You scored ${score} out of ${maxScore} correctly! Look at the remaining red flashcards to help you learn. Your score has been sync'd.`;
+                badge.innerText = `🥈 Math Superstar (${score}/${maxScore})`;
+            } else {
+                emoji.innerText = "🎒✏️";
+                title.innerText = "Terrific Daily Practice!";
+                body.innerText = `You scored ${score} out of ${maxScore} correct. Review the column tips inside the locked cards to master the carries! Your score is saved!`;
+                badge.innerText = `🥉 Apprentice Adventurer (${score}/${maxScore})`;
+            }
+        }
+
+        // modal controls
+        window.closeModal = function() {
+            document.getElementById('score-modal').classList.add('hidden');
+            stopConfetti();
+        }
+
+        // Switch workspace tabs addition vs subtraction
+        function switchSection(section) {
+            currentSection = section;
+            const tabAdd = document.getElementById('tab-addition');
+            const tabSub = document.getElementById('tab-subtraction');
+            const secAdd = document.getElementById('section-addition');
+            const secSub = document.getElementById('section-subtraction');
+
+            if (section === 'addition') {
+                tabAdd.className = "px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-blue-600 text-white flex items-center gap-2";
+                tabSub.className = "px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 flex items-center gap-2";
+                secAdd.classList.remove('hidden');
+                secSub.classList.add('hidden');
+            } else {
+                tabSub.className = "px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-blue-600 text-white flex items-center gap-2";
+                tabAdd.className = "px-6 py-3 rounded-full text-lg font-bold shadow-md transition-all duration-200 transform hover:scale-105 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 flex items-center gap-2";
+                secSub.classList.remove('hidden');
+                secAdd.classList.add('hidden');
+            }
+        }
+
+        // Generate fresh set
+        function refreshSet() {
+            generateFlashcards();
+            renderCards();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Procedural Confetti Animation
+        let canvas = document.getElementById('confetti-canvas');
+        let ctx = canvas.getContext('2d');
+        let confetti = [];
+        let animationFrame;
+
+        function startConfetti() {
+            canvas.classList.remove('hidden');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            confetti = [];
+            for (let i = 0; i < 150; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 4,
+                    d: Math.random() * canvas.height,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confetti.forEach((p, idx) => {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                    p.x += Math.sin(p.tiltAngle);
+                    p.tilt = Math.sin(p.tiltAngle - idx/3) * 15;
+
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r/2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2);
+                    ctx.stroke();
+
+                    if (p.y > canvas.height) {
+                        confetti[idx] = {
+                            x: Math.random() * canvas.width,
+                            y: -20,
+                            r: p.r,
+                            d: p.d,
+                            color: p.color,
+                            tilt: p.tilt,
+                            tiltAngleIncremental: p.tiltAngleIncremental,
+                            tiltAngle: p.tiltAngle
+                        };
+                    }
+                });
+                animationFrame = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function stopConfetti() {
+            cancelAnimationFrame(animationFrame);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.add('hidden');
+        }
+
+        window.addEventListener('resize', () => {
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+
+        // Initialize Workspace
+        window.onload = function() {
+            refreshSet();
+        };
+
+        // Expose necessary global functions
+        window.toggleParentPanel = toggleParentPanel;
+        window.setQuestionsTarget = setQuestionsTarget;
+        window.checkIndividualCard = checkIndividualCard;
+        window.checkTotalFinished = checkTotalFinished;
+        window.switchSection = switchSection;
+        window.refreshSet = refreshSet;
+    </script>
+</body>
+</html>
